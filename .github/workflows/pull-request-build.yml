@@ -24,3 +24,17 @@ jobs:
 
     - name: Build solution
       run: dotnet build --no-restore --configuration Release
+
+    - name: Notify Slack on failure
+      if: failure()  # runs only if any previous step fails
+      run: |
+        curl -X POST -H 'Content-type: application/json' \
+          --data-raw '{
+            "text": ":x: *Build failed!*\n
+            *Branch:* `${{ github.ref_name }}`\n
+            *Repository:* `${{ github.repository }}`\n
+            *Author:* `${{ github.actor }}`\n
+            *PR Link:* <${{ github.event.pull_request.html_url }}|View Pull Request>\n
+            *Expected Format:* feature|bugfix|hotfix/SCRUM-####/short-description"
+          }' \
+          ${{ secrets.SLACK_WEBHOOK_URL }}
