@@ -12,7 +12,7 @@ namespace SAMMAI.Log.Controllers
     [Route($"{BaseApi}/serilog")]
     public class SerilogController : ControllerBase
     {
-        private readonly ILogger<SerilogController> _logger;
+        private readon ly ILogger<SerilogController> _logger;
         private readonly ISerilogService _serilogService;
 
         public SerilogController(
