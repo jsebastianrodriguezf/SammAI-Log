@@ -6,6 +6,9 @@ on:
       - main
       - develop
 
+permissions:
+  contents: write
+
 jobs:
   validate-branch-name:
     runs-on: ubuntu-latest
