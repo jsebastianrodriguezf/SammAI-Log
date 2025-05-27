@@ -1,0 +1,6 @@
+@SAMMAI.Log_HostAddress = http://localhost:5233
+
+GET {{SAMMAI.Log_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
