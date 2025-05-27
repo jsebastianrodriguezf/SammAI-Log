@@ -1,0 +1,19 @@
+name: Validate Branch Name on Pull Request
+
+on:
+  pull_request:
+    branches: [develop]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch naming convention
+        run: |
+          echo "Branch name: ${{ github.head_ref }}"
+          if [[ ! "${{ github.head_ref }}" =~ ^(feature|bugfix|hotfix)/SCRUM-[0-9]+/.+ ]]; then
+            echo "❌ Invalid branch name. Must match: feature|bugfix|hotfix/SCRUM-{####}/description"
+            exit 1
+          fi
+        shell: bash
