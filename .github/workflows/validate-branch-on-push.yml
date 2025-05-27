@@ -9,13 +9,48 @@ on:
 jobs:
   validate-branch-name:
     runs-on: ubuntu-latest
+
     steps:
       - name: Validate branch naming convention
+        id: check_branch
+        shell: bash
         run: |
           echo "Branch name: ${{ github.ref_name }}"
           if [[ ! "${{ github.ref_name }}" =~ ^(feature|bugfix|hotfix)/SCRUM-[0-9]+/.+ ]]; then
+            echo "invalid=true" >> $GITHUB_OUTPUT
             echo "❌ Invalid branch name: '${{ github.ref_name }}'"
             echo "❌ Must match: feature|bugfix|hotfix/SCRUM-{####}/description"
             exit 1
+          else
+            echo "invalid=false" >> $GITHUB_OUTPUT
           fi
-        shell: bash
+
+      - name: Comment on commit if invalid
+        if: failure() && steps.check_branch.outputs.invalid == 'true'
+        uses: peter-evans/commit-comment@v3
+        with:
+          body: |
+            ❌ Your branch name **`${{ github.ref_name }}`** is invalid.
+
+            Please use the naming convention:  
+            - `feature/SCRUM-####/description`  
+            - `bugfix/SCRUM-####/description`  
+            - `hotfix/SCRUM-####/description`
+
+            This check runs automatically on every push.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          sha: ${{ github.sha }}
+
+      - name: Notify Slack if branch name is invalid
+        if: failure() && steps.check_branch.outputs.invalid == 'true'
+        run: |
+          payload="{
+            \"text\": \":x: *Invalid branch name* detected!\n
+            *Branch:* \`${{ github.ref_name }}\`\n
+            *Repository:* \`${{ github.repository }}\`\n
+            *Author:* \`${{ github.actor }}\`\n
+            *Expected Format:* feature|bugfix|hotfix/SCRUM-####/description\"
+          }"
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
