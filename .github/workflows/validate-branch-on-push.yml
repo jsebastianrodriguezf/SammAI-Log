@@ -1,0 +1,21 @@
+name: Validate Branch Name on Push
+
+on:
+  push:
+    branches-ignore:
+      - main
+      - develop
+
+jobs:
+  validate-branch-name:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate branch naming convention
+        run: |
+          echo "Branch name: ${{ github.ref_name }}"
+          if [[ ! "${{ github.ref_name }}" =~ ^(feature|bugfix|hotfix)/SCRUM-[0-9]+/.+ ]]; then
+            echo "❌ Invalid branch name: '${{ github.ref_name }}'"
+            echo "❌ Must match: feature|bugfix|hotfix/SCRUM-{####}/description"
+            exit 1
+          fi
+        shell: bash
