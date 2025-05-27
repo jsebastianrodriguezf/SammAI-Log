@@ -32,7 +32,7 @@ jobs:
           exit 1
 
       - name: Comment on commit if invalid
-        if: github.event_name == 'push' && steps.check_branch.outputs.invalid == 'true'
+        if: failure() &&  github.event_name == 'push' && steps.check_branch.outputs.invalid == 'true'
         uses: peter-evans/commit-comment@v3
         with:
           body: |
@@ -48,7 +48,7 @@ jobs:
           sha: ${{ github.sha }}
 
       - name: Notify Slack if branch name is invalid
-        if: steps.check_branch.outputs.invalid == 'true'
+        if: failure() &&  steps.check_branch.outputs.invalid == 'true'
         run: |
           curl -X POST -H 'Content-type: application/json' \
             --data '{

@@ -31,10 +31,9 @@ jobs:
         curl -X POST -H 'Content-type: application/json' \
           --data-raw '{
             "text": ":x: *Build failed!*\n
-            *Branch:* `${{ github.ref_name }}`\n
+            *Branch:* `${{ github.head_ref }}`\n
             *Repository:* `${{ github.repository }}`\n
             *Author:* `${{ github.actor }}`\n
-            *PR Link:* <${{ github.event.pull_request.html_url }}|View Pull Request>\n
-            *Expected Format:* feature|bugfix|hotfix/SCRUM-####/short-description"
+            *PR Link:* <${{ github.event.pull_request.html_url }}|View Pull Request>"
           }' \
           ${{ secrets.SLACK_WEBHOOK_URL }}
