@@ -2,9 +2,7 @@ name: Validate Branch Name on Push
 
 on:
   push:
-    branches-ignore:
-      - main
-      - develop
+    branches-ignore: [main, develop]
 
 permissions:
   contents: write
@@ -12,13 +10,52 @@ permissions:
 jobs:
   validate-branch-name:
     runs-on: ubuntu-latest
+    outputs:
+      invalid: ${{ steps.check_branch.outputs.invalid }}
     steps:
       - name: Validate branch naming convention
+        id: check_branch
+        shell: bash
         run: |
           echo "Branch name: ${{ github.ref_name }}"
           if [[ ! "${{ github.ref_name }}" =~ ^(feature|bugfix|hotfix)/SCRUM-[0-9]+/.+ ]]; then
-            echo "❌ Invalid branch name: '${{ github.ref_name }}'"
-            echo "❌ Must match: feature|bugfix|hotfix/SCRUM-{####}/description"
-            exit 1
+            echo "invalid=true" >> $GITHUB_OUTPUT
+          else
+            echo "invalid=false" >> $GITHUB_OUTPUT
           fi
-        shell: bash
+
+      - name: Fail if invalid
+        if: steps.check_branch.outputs.invalid == 'true'
+        run: |
+          echo "❌ Invalid branch name: '${{ github.ref_name }}'"
+          echo "❌ Must match: feature|bugfix|hotfix/SCRUM-{####}/short-description"
+          exit 1
+
+      - name: Comment on commit if invalid
+        if: github.event_name == 'push' && steps.check_branch.outputs.invalid == 'true'
+        uses: peter-evans/commit-comment@v3
+        with:
+          body: |
+            ❌ Your branch name **`${{ github.ref_name }}`** is invalid.
+
+            Please use the naming convention:  
+            - `feature/SCRUM-####/short-description`  
+            - `bugfix/SCRUM-####/short-description`  
+            - `hotfix/SCRUM-####/short-description`
+
+            This check runs automatically on every push.
+          token: ${{ secrets.GITHUB_TOKEN }}
+          sha: ${{ github.sha }}
+
+      - name: Notify Slack if branch name is invalid
+        if: steps.check_branch.outputs.invalid == 'true'
+        run: |
+          curl -X POST -H 'Content-type: application/json' \
+            --data '{
+              "text": ":x: *Invalid branch name* detected!\n
+              *Branch:* `${{ github.ref_name }}`\n
+              *Repository:* `${{ github.repository }}`\n
+              *Author:* `${{ github.actor }}`\n
+              *Expected Format:* feature|bugfix|hotfix/SCRUM-####/short-description"
+            }' \
+            ${{ secrets.SLACK_WEBHOOK_URL }}
