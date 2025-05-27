@@ -19,7 +19,7 @@ jobs:
         id: check_branch
         shell: bash
         run: |
-          echo "Branch name: "${{ github.head_ref }}"
+          echo "Branch name: ${{ github.head_ref }}"
           if [[ ! "${{ github.head_ref }}" =~ ^(feature|bugfix|hotfix)/SCRUM-[0-9]+/.+ ]]; then
             echo "invalid=true" >> $GITHUB_OUTPUT
           else
