@@ -19,8 +19,8 @@ jobs:
         id: check_branch
         shell: bash
         run: |
-          echo "Branch name: ${{ github.ref_name }}"
-          if [[ ! "${{ github.ref_name }}" =~ ^(feature|bugfix|hotfix)/SCRUM-[0-9]+/.+ ]]; then
+          echo "Branch name: "${{ github.head_ref }}"
+          if [[ ! "${{ github.head_ref }}" =~ ^(feature|bugfix|hotfix)/SCRUM-[0-9]+/.+ ]]; then
             echo "invalid=true" >> $GITHUB_OUTPUT
           else
             echo "invalid=false" >> $GITHUB_OUTPUT
@@ -29,12 +29,12 @@ jobs:
       - name: Fail if invalid
         if: steps.check_branch.outputs.invalid == 'true'
         run: |
-          echo "❌ Invalid branch name: '${{ github.ref_name }}'"
+          echo "❌ Invalid branch name: '${{ github.head_ref }}'"
           echo "❌ Must match: feature|bugfix|hotfix/SCRUM-{####}/short-description"
           exit 1
 
       - name: Comment on PR if invalid
-        if: github.event_name == 'pull_request' && steps.check_branch.outputs.invalid == 'true'
+        if: steps.check_branch.outputs.invalid == 'true'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -53,7 +53,7 @@ jobs:
           curl -X POST -H 'Content-type: application/json' \
             --data-raw "{
               \"text\": \":x: *Invalid branch name* detected!\n
-              *Branch:* \`${{ github.ref_name }}\`\n
+              *Branch:* \`${{ github.head_ref }}\`\n
               *Repository:* \`${{ github.repository }}\`\n
               *Author:* \`${{ github.actor }}\`\n
               *PR Link:* <${{ github.event.pull_request.html_url }}|View Pull Request>\n
