@@ -34,7 +34,7 @@ jobs:
           exit 1
 
       - name: Comment on PR if invalid
-        if: steps.check_branch.outputs.invalid == 'true'
+        if: failure() && steps.check_branch.outputs.invalid == 'true'
         uses: peter-evans/create-or-update-comment@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -48,7 +48,7 @@ jobs:
             - `hotfix/SCRUM-####/short-description`
 
       - name: Notify Slack if branch name is invalid
-        if: steps.check_branch.outputs.invalid == 'true'
+        if: failure() && steps.check_branch.outputs.invalid == 'true'
         run: |
           curl -X POST -H 'Content-type: application/json' \
             --data-raw "{
